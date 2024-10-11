@@ -1,9 +1,5 @@
 import { zodToConvex } from '@/utils/convex';
-import {
-  photo_zodSchema,
-  replyToMessage_zodSchema,
-  telegramPayload_zodSchema,
-} from '@/utils/telegram/types/incoming-message';
+import { telegramPayload_zodSchema } from '@/utils/telegram/types/incoming-message';
 import { z } from 'zod';
 
 //Convex
