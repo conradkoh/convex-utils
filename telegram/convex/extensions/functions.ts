@@ -1,13 +1,22 @@
 import { TelegramMessageBuilder } from '@/utils/telegram';
-import { telegramMessageOutgoingConvexSchema } from '@/utils/telegram/convex';
+import {
+  telegramMessageOutgoingConvexSchema,
+  telegramPayloadConvexSchema,
+  WebhookPayload,
+} from '@/utils/telegram/convex';
 import { internal } from 'convex/_generated/api';
-import { type ActionCtx, internalAction } from 'convex/_generated/server';
+import {
+  type ActionCtx,
+  internalAction,
+  internalMutation,
+} from 'convex/_generated/server';
+import { v } from 'convex/values';
+import { z } from 'zod';
 
 /**
- * Register webhook with telegram.
- * Expose this function in convex/telegram.ts
+ * Register webhook with telegram by running _registerWebhook from the convex console
  */
-export const registerWebhookAction = internalAction({
+export const _registerWebhook = internalAction({
   args: {},
   handler: async () => {
     const url = `${process.env.CONVEX_SITE_URL}/onMessage?token=${process.env.TELEGRAM_WEBHOOK_SECRET}`;
@@ -23,7 +32,7 @@ export const registerWebhookAction = internalAction({
         body: JSON.stringify({
           url: url,
         }),
-      },
+      }
     );
     if (response.status !== 200) {
       throw new Error('Failed to register webhook');
@@ -33,9 +42,8 @@ export const registerWebhookAction = internalAction({
 
 /**
  * Send message to telegram.
- * Expose this function in convex/telegram.ts
  */
-export const sendMessageAction = internalAction({
+export const _sendMessage = internalAction({
   args: telegramMessageOutgoingConvexSchema,
   handler: async (ctx, args) => {
     const response = await fetch(
@@ -48,7 +56,7 @@ export const sendMessageAction = internalAction({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(args),
-      },
+      }
     );
     if (response.status !== 200) {
       console.error('failed to send telegram message:', {
@@ -67,26 +75,14 @@ export const sendMessageAction = internalAction({
 });
 
 /**
- * Sends a message to telegram
- * @param handler
+ * Logs a message to the database
  */
-export const sendMessage = async (
-  ctx: ActionCtx,
-  to: {
-    chatId: number;
+export const _logMessage = internalMutation({
+  args: {
+    raw: v.any(),
+    formatted: telegramPayloadConvexSchema,
   },
-  handler: (
-    tg: TelegramMessageBuilder,
-  ) =>
-    | Promise<[message: TelegramMessageBuilder]>
-    | [message: TelegramMessageBuilder],
-) => {
-  const t = new TelegramMessageBuilder();
-  t.chatId(to.chatId);
-  const [builder] = await handler(t);
-  const message = builder.build();
-  await ctx.runAction(internal.telegram.sendMessage, message);
-};
-
-//export all types from the telegram helpers
-export * from './types';
+  handler: async (ctx, args) => {
+    await ctx.db.insert('telegram_message_logs', args);
+  },
+});

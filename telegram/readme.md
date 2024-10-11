@@ -22,65 +22,77 @@
     npx convex env set TELEGRAM_BOT_TOKEN <your-bot-token>
     ```
 
+## Preparing Convex
+This enables you to inspect messages from the convex console.
+1. Expose the schema extension in `convex/schema.ts`
+    ```ts
+    import { telegramMessageLogSchemaExtension } from '@/utils/telegram/convex/extensions/schema';
+    import { defineSchema } from 'convex/server';
+
+    const schema = defineSchema({
+      ...telegramMessageLogSchemaExtension,
+    });
+
+    export default schema;
+    ```
+2. Expose the function extensions in `convex/telegram.ts`
+    ```ts
+    export * from '@/utils/telegram/convex/extensions/functions';
+    ```
+
+
 ## Registering the webhook
 
-1. Implement a http endpoint to handle the webhook
+1. Implement a http endpoint in `convex/http.ts` to handle the webhook in
 
    ```ts
-   import { httpRouter } from 'convex/server';
-   import { httpAction } from './_generated/server';
-   import { internal } from './_generated/api';
-   import { parseTelegramPayload } from '@/utils/telegram';
-   const http = httpRouter();
-   http.route({
-     path: '/onMessage',
-     method: 'POST',
-     handler: httpAction(async (ctx, req) => {
-       try {
-         const data = parseTelegramPayload(await req.json());
-         await ctx.runMutation(internal.telegram._writeMessage, {
-           rawPayload: data,
-         });
-         return new Response(null, { status: 200 });
-       } catch (error) {
-         return new Response(JSON.stringify(error), { status: 500 });
-       }
-     }),
-   });
-   ```
-
-2. Expose the webhook actions in convex/telegram.ts
-
-   ```ts
-   export const registerWebhook = registerWebhookAction;
-   export const sendMessage = sendMessageAction;
-   ```
-
-3. Execute the `registerWebhook` function from the convex console to register the webhook with telegram. Remember that this needs to be run for each environment.
-
-4. Send replies to messages using the `sendMessage` function.
-
-    ```ts
+    import { httpRouter } from 'convex/server';
+    import { httpAction } from './_generated/server';
+    import {
+      logMessage,
+      parseTelegramPayload,
+      sendMessage,
+    } from '@/utils/telegram';
+    const http = httpRouter();
     http.route({
       path: '/onMessage',
       method: 'POST',
       handler: httpAction(async (ctx, req) => {
         try {
-          const message = parseTelegramPayload(await req.json());
-          const chatId = message.message?.chat.id;
-          if (!chatId) {
-            console.error('No chat id found', message);
-            return new Response(null, { status: 200 }); //ignore the message for those we can't handle for now
+          const raw = await req.json();
+          await logMessage(ctx, raw); //log the message
+          const formatted = parseTelegramPayload(raw);
+          // validation checks
+          if (!formatted.message?.chat?.id) {
+            console.log('chat id not found', formatted);
+            return new Response(null, { status: 200 });
           }
-          //Send a message to the user
-          await sendMessage(ctx, { chatId }, async (tg) => {
-            return [tg.text('Hello')];
-          });
+          if (!formatted.message?.from.id) {
+            console.log('from id not found', formatted);
+            return new Response(null, { status: 200 });
+          }
+
+          // TODO: Implement Processing
+          const responseText = 'hello';
+
+          //Send response
+          await sendMessage(
+            ctx,
+            { chatId: formatted.message?.chat.id },
+            async (tg) => {
+              return [tg.text(responseText)];
+            }
+          );
           return new Response(null, { status: 200 });
         } catch (error) {
-          console.error('uncaught exception in http onMessage handler:', error);
-          return new Response(JSON.stringify(error), { status: 500 });
+          console.error('unexpected error', error);
+          return new Response(null, { status: 200 }); //we don't want telegram to retry errors
         }
       }),
     });
-    ```
+
+    export default http;
+   ```
+2. Execute the `_registerWebhook` function from the convex console to register the webhook with telegram. Remember that this needs to be run for each environment.
+
+3. Send a test message to the bot and ensure that the message is received.

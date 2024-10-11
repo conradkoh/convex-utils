@@ -10,7 +10,7 @@ export function parseTelegramPayload(payload: any): WebhookPayload {
 }
 
 //Zod
-const telegramPayloadZodSchema = z.object({
+export const telegramPayloadZodSchema = z.object({
   update_id: z.number(),
   message: z
     .object({
@@ -38,7 +38,7 @@ const telegramPayloadZodSchema = z.object({
             offset: z.number(),
             length: z.number(),
             type: z.string(),
-          }),
+          })
         )
         .optional(), // Optional
     })
@@ -47,7 +47,7 @@ const telegramPayloadZodSchema = z.object({
 
 //Convex
 export const telegramPayloadConvexSchema = zodToConvex(
-  telegramPayloadZodSchema,
+  telegramPayloadZodSchema
 );
 
 // -----------------------------
@@ -70,7 +70,7 @@ const telegramMessageOutgoingZodSchema = z.object({
         user: z.object({}).optional(),
         language: z.string().optional(),
         custom_emoji_id: z.string().optional(),
-      }),
+      })
     )
     .optional(),
   disable_web_page_preview: z.boolean().optional(),
@@ -99,8 +99,8 @@ const telegramMessageOutgoingZodSchema = z.object({
             switch_inline_query_current_chat: z.string().optional(),
             callback_game: z.object({}).optional(),
             pay: z.boolean().optional(),
-          }),
-        ),
+          })
+        )
       ),
     })
     .optional(),
@@ -113,5 +113,5 @@ export type TelegramMessageOutgoing = z.infer<
 
 // Convex schema
 export const telegramMessageOutgoingConvexSchema = zodToConvex(
-  telegramMessageOutgoingZodSchema,
+  telegramMessageOutgoingZodSchema
 );
