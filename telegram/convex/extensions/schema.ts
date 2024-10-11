@@ -1,12 +1,11 @@
-import { telegramPayloadZodSchema } from '@/utils/telegram/convex/types';
-import { zodToConvex } from 'convex-helpers/server/zod';
+import { telegramPayload_convexSchema } from '@/utils/telegram/convex/types';
 import { defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export const telegramMessageLogSchemaExtension = {
   telegram_message_logs: defineTable({
     raw: v.any(),
-    formatted: zodToConvex(telegramPayloadZodSchema),
+    formatted: telegramPayload_convexSchema,
     addInfo: v.optional(v.any()),
   })
     .index('by_chatId', ['formatted.message.chat.id'])

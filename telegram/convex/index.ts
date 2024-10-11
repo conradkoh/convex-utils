@@ -1,8 +1,5 @@
 import { TelegramMessageBuilder } from '@/utils/telegram/classes/TelegramMessageBuilder';
-import {
-  parseTelegramPayload,
-  WebhookPayload,
-} from '@/utils/telegram/convex/types';
+import { parseTelegramPayload } from '@/utils/telegram/types';
 import { internal } from 'convex/_generated/api';
 import { ActionCtx } from 'convex/_generated/server';
 

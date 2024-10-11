@@ -50,9 +50,9 @@ This enables you to inspect messages from the convex console.
     import { httpAction } from './_generated/server';
     import {
       logMessage,
-      parseTelegramPayload,
       sendMessage,
     } from '@/utils/telegram';
+    import { parseTelegramPayload } from '@/utils/telegram/types';
     const http = httpRouter();
     http.route({
       path: '/onMessage',

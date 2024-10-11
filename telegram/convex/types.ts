@@ -1,65 +1,14 @@
 import { zodToConvex } from '@/utils/convex';
+import {
+  photo_zodSchema,
+  replyToMessage_zodSchema,
+  telegramPayload_zodSchema,
+} from '@/utils/telegram/types/incoming-message';
 import { z } from 'zod';
-// -----------------------------
-// Webhook Payload
-// -----------------------------
-//Types
-export type WebhookPayload = z.infer<typeof telegramPayloadZodSchema>;
-export function parseTelegramPayload(payload: any): WebhookPayload {
-  return telegramPayloadZodSchema.parse(payload);
-}
-
-//Zod
-export const telegramPayloadZodSchema = z.object({
-  update_id: z.number(),
-  message: z
-    .object({
-      message_id: z.number(),
-      from: z.object({
-        id: z.number(),
-        is_bot: z.boolean(),
-        first_name: z.string(),
-        last_name: z.string().optional(), // Optional
-        username: z.string().optional(), // Optional
-        language_code: z.string().optional(), // Optional
-      }),
-      chat: z.object({
-        id: z.number(),
-        first_name: z.string().optional(), // Optional
-        last_name: z.string().optional(), // Optional
-        username: z.string().optional(), // Optional
-        type: z.string(),
-      }),
-      date: z.number(),
-      text: z.string().optional(), // Optional
-      caption: z.string().optional(), // Optional
-      entities: z
-        .array(
-          z.object({
-            offset: z.number(),
-            length: z.number(),
-            type: z.string(),
-          })
-        )
-        .optional(), // Optional
-      photo: z
-        .array(
-          z.object({
-            file_id: z.string(),
-            file_unique_id: z.string(),
-            width: z.number(),
-            height: z.number(),
-            file_size: z.number(),
-          })
-        )
-        .optional(),
-    })
-    .optional(), // Optional because other types of updates can exist
-});
 
 //Convex
-export const telegramPayloadConvexSchema = zodToConvex(
-  telegramPayloadZodSchema
+export const telegramPayload_convexSchema = zodToConvex(
+  telegramPayload_zodSchema
 );
 
 // -----------------------------
@@ -67,7 +16,7 @@ export const telegramPayloadConvexSchema = zodToConvex(
 // -----------------------------
 
 // Zod schema for TelegramMessageOutgoing
-const telegramMessageOutgoingZodSchema = z.object({
+const telegramMessageOutgoing_zodSchema = z.object({
   chat_id: z.union([z.number(), z.string()]),
   message_thread_id: z.number().optional(),
   text: z.string(),
@@ -120,25 +69,13 @@ const telegramMessageOutgoingZodSchema = z.object({
 
 // Type inference from the Zod schema
 export type TelegramMessageOutgoing = z.infer<
-  typeof telegramMessageOutgoingZodSchema
+  typeof telegramMessageOutgoing_zodSchema
 >;
 
 // Convex schema
 export const telegramMessageOutgoingConvexSchema = zodToConvex(
-  telegramMessageOutgoingZodSchema
+  telegramMessageOutgoing_zodSchema
 );
-
-//========================================
-// Telegram Photo
-//========================================
-export type Photo = z.infer<typeof photo_zodSchema>;
-export const photo_zodSchema = z.object({
-  file_id: z.string(),
-  file_unique_id: z.string(),
-  width: z.number(),
-  height: z.number(),
-  file_size: z.number(),
-});
 
 //========================================
 // Telegram Files

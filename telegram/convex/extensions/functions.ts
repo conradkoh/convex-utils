@@ -1,8 +1,8 @@
 import { TelegramMessageBuilder } from '@/utils/telegram';
 import {
   telegramMessageOutgoingConvexSchema,
-  telegramPayloadConvexSchema,
-  WebhookPayload,
+  telegramPayload_convexSchema,
+  TelegramWebhookPayload,
 } from '@/utils/telegram/convex';
 import { internal } from 'convex/_generated/api';
 import {
@@ -80,7 +80,7 @@ export const _sendMessage = internalAction({
 export const _logMessage = internalMutation({
   args: {
     raw: v.any(),
-    formatted: telegramPayloadConvexSchema,
+    formatted: telegramPayload_convexSchema,
     addInfo: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
