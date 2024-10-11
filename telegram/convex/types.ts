@@ -41,6 +41,17 @@ export const telegramPayloadZodSchema = z.object({
           })
         )
         .optional(), // Optional
+      photo: z
+        .array(
+          z.object({
+            file_id: z.string(),
+            file_unique_id: z.string(),
+            width: z.number(),
+            height: z.number(),
+            file_size: z.number(),
+          })
+        )
+        .optional(),
     })
     .optional(), // Optional because other types of updates can exist
 });
@@ -115,3 +126,29 @@ export type TelegramMessageOutgoing = z.infer<
 export const telegramMessageOutgoingConvexSchema = zodToConvex(
   telegramMessageOutgoingZodSchema
 );
+
+//========================================
+// Telegram Photo
+//========================================
+export type Photo = z.infer<typeof photo_zodSchema>;
+export const photo_zodSchema = z.object({
+  file_id: z.string(),
+  file_unique_id: z.string(),
+  width: z.number(),
+  height: z.number(),
+  file_size: z.number(),
+});
+
+//========================================
+// Telegram Files
+//========================================
+export type GetFileResponse = z.infer<typeof getFileResponse_zodSchema>;
+export const getFileResponse_zodSchema = z.object({
+  ok: z.boolean(),
+  result: z.object({
+    file_id: z.string(),
+    file_unique_id: z.string(),
+    file_size: z.number(),
+    file_path: z.string(),
+  }),
+});
