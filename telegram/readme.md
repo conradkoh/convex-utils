@@ -15,6 +15,12 @@
     ```sh
     npx convex env set TELEGRAM_WEBHOOK_SECRET <your-secret-token>
     ```
+3. Set the bot token in the environment variables in your convex console
+
+    ```sh
+    # bot token generated from @BotFather
+    npx convex env set TELEGRAM_BOT_TOKEN <your-bot-token>
+    ```
 
 ## Registering the webhook
 
