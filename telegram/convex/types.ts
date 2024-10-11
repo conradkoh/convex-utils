@@ -32,6 +32,7 @@ export const telegramPayloadZodSchema = z.object({
       }),
       date: z.number(),
       text: z.string().optional(), // Optional
+      caption: z.string().optional(), // Optional
       entities: z
         .array(
           z.object({
