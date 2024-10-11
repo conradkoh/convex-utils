@@ -1,2 +1,2 @@
-export * from './convex';
+export * from './functions';
 export * from './types';
