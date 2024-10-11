@@ -7,13 +7,13 @@
 1. Generate a new secret token
 
     ```sh
-    yarn bun src/utils/telegram/scripts/generate-webhook-secret.tss
+    npx bun src/utils/telegram/scripts/generate-webhook-secret.ts
     ```
 
 2. Set the secret token in the environment variables in your convex console
 
     ```sh
-    yarn convex env set TELEGRAM_WEBHOOK_SECRET <your-secret-token>
+    npx convex env set TELEGRAM_WEBHOOK_SECRET <your-secret-token>
     ```
 
 ## Registering the webhook
