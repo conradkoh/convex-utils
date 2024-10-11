@@ -7,6 +7,7 @@ export const telegramMessageLogSchemaExtension = {
   telegram_message_logs: defineTable({
     raw: v.any(),
     formatted: zodToConvex(telegramPayloadZodSchema),
+    addInfo: v.optional(v.any()),
   })
     .index('by_chatId', ['formatted.message.chat.id'])
     .index('by_chatId_userId', [

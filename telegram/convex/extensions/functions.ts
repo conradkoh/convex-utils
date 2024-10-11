@@ -81,6 +81,7 @@ export const _logMessage = internalMutation({
   args: {
     raw: v.any(),
     formatted: telegramPayloadConvexSchema,
+    addInfo: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert('telegram_message_logs', args);

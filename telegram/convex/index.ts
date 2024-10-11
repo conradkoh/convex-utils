@@ -33,10 +33,11 @@ export const sendMessage = async (
  * @param ctx
  * @param message
  */
-export const logMessage = async (ctx: ActionCtx, raw: any) => {
+export const logMessage = async (ctx: ActionCtx, raw: any, addInfo?: any) => {
   await ctx.runMutation(internal.telegram._logMessage, {
     raw,
     formatted: parseTelegramPayload(raw),
+    addInfo,
   });
 };
 
