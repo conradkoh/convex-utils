@@ -40,6 +40,18 @@ This enables you to inspect messages from the convex console.
     export * from '@/utils/telegram/convex/extensions/functions';
     ```
 
+3. Expose the http extensions in `convex/http.ts`
+    ```ts
+    import { httpRouter } from 'convex/server';
+    const http = httpRouter();
+    /**
+     * Expose the telegram file proxy to access telegram files without exposing the bot token
+    */
+    bindTelegramHTTPFileProxy(http);
+    export default http;
+    ```
+
+
 
 ## Registering the webhook
 
@@ -53,6 +65,10 @@ This enables you to inspect messages from the convex console.
       sendMessage,
     } from '@/utils/telegram';
     import { parseTelegramPayload } from '@/utils/telegram/types';
+    import {
+      bindTelegramHTTPFileProxy,
+      getPhotoProxyURL
+    } from '@/utils/telegram/convex/extensions/http';
     const http = httpRouter();
     http.route({
       path: '/onMessage',
@@ -62,6 +78,7 @@ This enables you to inspect messages from the convex console.
           const raw = await req.json();
           await logMessage(ctx, raw); //log the message
           const formatted = parseTelegramPayload(raw);
+          const message = formatted.message;
           // validation checks
           if (!formatted.message?.chat?.id) {
             console.log('chat id not found', formatted);
@@ -74,7 +91,11 @@ This enables you to inspect messages from the convex console.
 
           // TODO: Implement Processing
           const responseText = 'hello';
-
+          // TODO: Handle photos
+          // if (message?.photo) {
+          //   const photoURL = getPhotoProxyURL(message.photo);
+          //   console.log('photo url', photoURL);
+          // }
           //Send response
           await sendMessage(
             ctx,
@@ -90,6 +111,11 @@ This enables you to inspect messages from the convex console.
         }
       }),
     });
+
+    /**
+     * Expose the telegram file proxy to access telegram files without exposing the bot token
+     */
+    bindTelegramHTTPFileProxy(http);
 
     export default http;
    ```
