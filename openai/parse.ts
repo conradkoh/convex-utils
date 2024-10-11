@@ -12,6 +12,9 @@ export const openAIParse = async <T extends z.ZodType>(p: {
     name: string; //The name of the schema that gives context to the data that the response should contain
     zod: T;
   };
+  options?: {
+    model?: OpenAIModel;
+  };
 }) => {
   const client = new OpenAI();
   const schema = z.object({
@@ -22,7 +25,7 @@ export const openAIParse = async <T extends z.ZodType>(p: {
       { role: 'system', content: p.systemPrompt },
       { role: 'user', content: p.text },
     ],
-    model: OpenAIModel.GPT_4o,
+    model: p.options?.model ?? OpenAIModel.GPT_4o_mini,
     temperature: 0,
     response_format: {
       type: 'json_schema',
@@ -35,7 +38,7 @@ export const openAIParse = async <T extends z.ZodType>(p: {
   });
 
   // parse the response
-  const contentRaw = chatCompletion.choices[0].message.content;
+  const contentRaw = chatCompletion.choices[0]?.message?.content;
   if (!contentRaw) throw new Error('Null response from OpenAI');
   let res: z.infer<typeof schema> | undefined;
   try {
@@ -43,9 +46,9 @@ export const openAIParse = async <T extends z.ZodType>(p: {
   } catch (err) {
     console.error(
       'invalid payload:',
-      JSON.stringify(JSON.parse(contentRaw), null, 2),
+      JSON.stringify(JSON.parse(contentRaw), null, 2)
     );
-    throw new Error('OpenAI return a response with an invalid format.');
+    throw new Error('OpenAI returned a response with an invalid format.');
   }
 
   const usage = getUsage(OpenAIModel.GPT_4o, chatCompletion);
