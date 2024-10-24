@@ -1,3 +1,4 @@
+import { document_zodSchema } from '@/utils/telegram/types/incoming-message/document';
 import { photo_zodSchema } from '@/utils/telegram/types/incoming-message/photo';
 import { replyToMessage_zodSchema } from '@/utils/telegram/types/incoming-message/reply_to_message';
 import { z } from 'zod';
@@ -38,6 +39,7 @@ export const telegramPayload_zodSchema = z.object({
         )
         .optional(), // Optional
       photo: z.array(photo_zodSchema).optional(),
+      document: document_zodSchema.optional(),
 
       // Reply to message
       reply_to_message: replyToMessage_zodSchema.optional(),

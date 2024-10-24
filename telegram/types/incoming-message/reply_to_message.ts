@@ -1,6 +1,7 @@
 //==========================================
 // Reply To Message
 
+import { document_zodSchema } from '@/utils/telegram/types/incoming-message/document';
 import { z } from 'zod';
 
 //==========================================
@@ -34,4 +35,5 @@ export const replyToMessage_zodSchema = z.object({
       })
     )
     .optional(), // Marked as optional
+  document: document_zodSchema.optional(),
 });
