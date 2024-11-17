@@ -1,3 +1,4 @@
+import { TelegramFileHelper } from '@/utils/telegram/classes/TelegramFileHelper';
 import { getFileResponse_zodSchema } from '@/utils/telegram/convex/types';
 import { Photo, photo_zodSchema } from '@/utils/telegram/types';
 import { document_zodSchema } from '@/utils/telegram/types/incoming-message/document';
@@ -26,32 +27,25 @@ export class TelegramFileProxy {
           const params = proxyReqParams_zodSchema.parse(
             Object.fromEntries(new URL(req.url).searchParams.entries())
           );
-          const TELEGRAM_BASE_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
-          const TELEGRAM_BASE_FILE_URL = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}`;
-          // get file metadata
-          const fileMeta = getFileResponse_zodSchema.parse(
-            await (
-              await fetch(
-                `${TELEGRAM_BASE_URL}/getFile?file_id=${params.file_id}`
-              )
-            ).json()
-          );
-          // get file content
-          const fileContentURL = `${TELEGRAM_BASE_FILE_URL}/${fileMeta.result.file_path}`;
-          const fileContentReq = await fetch(fileContentURL);
-          const fileContent = await fileContentReq.blob();
-
+          const downloadFileName = params.download_file_name;
+          if (!downloadFileName) {
+            throw new Error('download_file_name is required');
+          }
+          const fileHelper = new TelegramFileHelper();
+          const fileInfo = await fileHelper.getFileById(params.file_id);
+          const fileMeta = fileInfo.meta;
+          const fileContent = await fileInfo.getContent();
           if (fileMeta.ok) {
-            const contentType = fileContentReq.headers.get('Content-Type');
+            const contentType = fileContent.contentType;
             if (contentType === null) {
               throw new Error('Content-Type header is missing');
             }
 
-            return new Response(fileContent, {
+            return new Response(fileContent.blob, {
               headers: {
-                'Content-Type': mimeTypeForFile(fileMeta.result.file_path), //this uses the native browser type which allows viewing
+                'Content-Type': mimeTypeForFile(params.download_file_name), //this uses the native browser type which allows viewing
                 // 'Content-Type': contentType, //this will force a download instead when it is application/octet-stream
-                'Content-Disposition': `inline; filename="${fileMeta.result.file_path}"`,
+                'Content-Disposition': `inline; filename="${params.download_file_name}"`,
               },
             });
           }
@@ -60,7 +54,7 @@ export class TelegramFileProxy {
             JSON.stringify(
               {
                 fileMeta,
-                fileContent: fileContentReq,
+                fileContent: fileContent.blob,
               },
               null,
               2
@@ -87,11 +81,11 @@ export class TelegramFileProxy {
    * Generate the proxy file URL
    * @param f
    */
-  static GenerateFileURL(f: File): string {
+  static async GenerateFileURL(f: File): Promise<string> {
     switch (f.type) {
       case 'document': {
         const doc = f.document;
-        return `${process.env.CONVEX_SITE_URL}/files/telegram?file_id=${doc.file_id}`;
+        return `${process.env.CONVEX_SITE_URL}/files/telegram?file_id=${encodeURIComponent(doc.file_id)}&download_file_name=${encodeURIComponent(doc.file_name)}`;
       }
       case 'photo': {
         const photo = f.photo;
@@ -103,7 +97,11 @@ export class TelegramFileProxy {
               maxResPhoto = p;
             }
           }
-          return `${process.env.CONVEX_SITE_URL}/files/telegram?file_id=${maxResPhoto.file_id}`;
+          const file = await new TelegramFileHelper().getFileById(
+            maxResPhoto.file_id
+          );
+          // for photos, they have no explicit file name, so we the original path to derive the extension and embed it in the URL
+          return `${process.env.CONVEX_SITE_URL}/files/telegram?file_id=${encodeURIComponent(maxResPhoto.file_id)}&download_file_name=${encodeURIComponent(file.getDerivedFileName())}`;
         }
         throw new Error('No photo found in list');
       }
@@ -133,4 +131,5 @@ const file_zodSchema = z.union([
 
 const proxyReqParams_zodSchema = z.object({
   file_id: z.string(),
+  download_file_name: z.string(),
 });
